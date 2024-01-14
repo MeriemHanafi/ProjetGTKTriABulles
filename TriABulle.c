@@ -63,7 +63,6 @@ void displayTab(GtkWidget *widget, int dim, float tab[dim],int pos) {
         }  
         g_free(text);
     }
-
 }
 
 void displayTabAnim(GtkWidget *widget, int dim, float tab[dim],int p,int j) {
@@ -111,6 +110,66 @@ void displayTabAnim(GtkWidget *widget, int dim, float tab[dim],int p,int j) {
     }
 }
 
+static void valider (GtkButton *button, gpointer data) {
+    entry = GTK_WIDGET(data);
+    const gchar *text = gtk_editable_get_text(GTK_EDITABLE(entry));
+    dim = atoi(text);
+    gtk_widget_set_visible(GTK_WIDGET(label), FALSE);
+    gtk_widget_set_visible(GTK_WIDGET(entry), FALSE);
+    gtk_widget_set_visible(GTK_WIDGET(Gobutton), FALSE);
+    srand(time(NULL));
+     for (int i = 0; i < dim; ++i) {
+        tab[i] = rand() % 100;   // Valeurs aléatoires entre 0 et 99
+     }
+    displayTab(GTK_WIDGET(Dgrid),dim, tab,-1);
+}
+
+static void svalider (GtkButton *button, gpointer data) {
+    entry = GTK_WIDGET(data);
+    const gchar *text = gtk_editable_get_text(GTK_EDITABLE(entry));
+    char *token;
+    double nombre;
+    char *copyt = g_strdup(text);
+    dim=-1;
+    token = strtok(copyt, ",");
+    while (token != NULL) {
+        nombre = strtod(token, NULL);
+        dim++;
+        tab[dim] = nombre;
+        token = strtok(NULL, ",");
+    }
+    dim++;
+    gtk_widget_set_visible(GTK_WIDGET(label), FALSE);
+    gtk_widget_set_visible(GTK_WIDGET(entry), FALSE);
+    gtk_widget_set_visible(GTK_WIDGET(info), FALSE);
+    gtk_widget_set_visible(GTK_WIDGET(Gobutton), FALSE);
+    displayTab(GTK_WIDGET(Dgrid),dim, tab,-1);
+}
+
+void saisie (){
+    gtk_grid_set_row_spacing(GTK_GRID(grid), 20);
+    label = gtk_label_new("Saisir les données du tableau :");
+    gtk_grid_attach(GTK_GRID(grid), label, 1, 7, 2, 1);
+    info = gtk_label_new("(utiliser la \",\" comme séparateur et le \".\" pour les décimaux)");
+    gtk_grid_attach(GTK_GRID(grid), info, 3, 8, 12, 1);
+    entry = gtk_entry_new();
+    gtk_grid_attach(GTK_GRID(grid), entry, 3, 7, 4, 1);
+    Gobutton = gtk_button_new_with_label("Go");
+    g_signal_connect(Gobutton, "clicked", G_CALLBACK(svalider), entry);
+    gtk_grid_attach(GTK_GRID(grid), Gobutton, 8, 7, 1, 1);
+}
+
+void Dimension (){
+    gtk_grid_set_row_spacing(GTK_GRID(grid), 70);
+    label = gtk_label_new("Donner la dimension du tableau :");
+    gtk_grid_attach(GTK_GRID(grid), label, 1, 7, 2, 1);
+    entry = gtk_entry_new();
+    gtk_grid_attach(GTK_GRID(grid), entry, 3, 7, 1, 1);
+    g_signal_connect(entry, "activate", G_CALLBACK(valider), entry);
+    Gobutton = gtk_button_new_with_label("Go");
+    g_signal_connect(Gobutton, "clicked", G_CALLBACK(valider), entry);
+    gtk_grid_attach(GTK_GRID(grid), Gobutton, 4, 7, 1, 1);
+}
 
 void permute(float *a, float *b) {
     float temp = *a;
@@ -176,9 +235,7 @@ static void rechvalider (GtkButton *button, gpointer data) {
     float val;
     sscanf(text,"%f",&val);
     gtk_widget_set_visible(GTK_WIDGET(label), FALSE);
-    gtk_widget_set_visible(GTK_WIDGET(label1), FALSE);
     gtk_widget_set_visible(GTK_WIDGET(entry), FALSE);
-    gtk_widget_set_visible(GTK_WIDGET(entry1), FALSE);
     gtk_widget_set_visible(GTK_WIDGET(Gobutton), FALSE);
     int i=0;
     while ((i<dim) && (tab[i]!=val)){
@@ -199,7 +256,6 @@ static void recherche (GtkButton *button, gpointer data) {
     gtk_widget_set_visible(GTK_WIDGET(Abutton), FALSE);
     gtk_grid_remove_row(GTK_GRID(grid),7);
     gtk_grid_remove_row(GTK_GRID(grid),8);
-    gtk_grid_set_row_spacing(GTK_GRID(grid), 70);
     label = gtk_label_new("Donner la valeur à rechercher :");
     gtk_grid_attach(GTK_GRID(grid), label, 1, 7, 4, 1);
     entry = gtk_entry_new();
@@ -216,9 +272,7 @@ static void suppvalider (GtkButton *button, gpointer data) {
     sscanf(text, "%f", &val);
     g_print("la valeur à supprimer %d\n", val);
     gtk_widget_set_visible(GTK_WIDGET(label), FALSE);
-    gtk_widget_set_visible(GTK_WIDGET(label1), FALSE);
     gtk_widget_set_visible(GTK_WIDGET(entry), FALSE);
-    gtk_widget_set_visible(GTK_WIDGET(entry1), FALSE);
     gtk_widget_set_visible(GTK_WIDGET(Gobutton), FALSE);
     int i=0;
     while (i<dim && tab[i] != val) {
@@ -299,67 +353,6 @@ static void insertion (GtkButton *button, gpointer data) {
     Gobutton = gtk_button_new_with_label("Go");
     g_signal_connect(Gobutton, "clicked", G_CALLBACK(insvalider),NULL);
     gtk_grid_attach(GTK_GRID(grid), Gobutton, 5, 8, 1, 1);
-}
-
-static void valider (GtkButton *button, gpointer data) {
-    entry = GTK_WIDGET(data);
-    const gchar *text = gtk_editable_get_text(GTK_EDITABLE(entry));
-    dim = atoi(text);
-    gtk_widget_set_visible(GTK_WIDGET(label), FALSE);
-    gtk_widget_set_visible(GTK_WIDGET(entry), FALSE);
-    gtk_widget_set_visible(GTK_WIDGET(Gobutton), FALSE);
-    srand(time(NULL));
-    for (int i = 0; i < dim; ++i) {
-        tab[i] = rand() % 100;   // Valeurs aléatoires entre 0 et 99
-     }
-    displayTab(GTK_WIDGET(Dgrid),dim, tab,-1);
-}
-
-static void svalider (GtkButton *button, gpointer data) {
-    entry = GTK_WIDGET(data);
-    const gchar *text = gtk_editable_get_text(GTK_EDITABLE(entry));
-    char *token;
-    double nombre;
-    char *copyt = g_strdup(text);
-    dim=-1;
-    token = strtok(copyt, ",");
-    while (token != NULL) {
-        nombre = strtod(token, NULL);
-        dim++;
-        tab[dim] = nombre;
-        token = strtok(NULL, ",");
-    }
-    dim++;
-    gtk_widget_set_visible(GTK_WIDGET(label), FALSE);
-    gtk_widget_set_visible(GTK_WIDGET(entry), FALSE);
-    gtk_widget_set_visible(GTK_WIDGET(info), FALSE);
-    gtk_widget_set_visible(GTK_WIDGET(Gobutton), FALSE);
-    displayTab(GTK_WIDGET(Dgrid),dim, tab,-1);
-}
-
-void saisie (){
-    gtk_grid_set_row_spacing(GTK_GRID(grid), 20);
-    label = gtk_label_new("Saisir les données du tableau :");
-    gtk_grid_attach(GTK_GRID(grid), label, 1, 7, 2, 1);
-    info = gtk_label_new("(utiliser la \",\" comme séparateur et le \".\" pour les décimaux)");
-    gtk_grid_attach(GTK_GRID(grid), info, 3, 8, 12, 1);
-    entry = gtk_entry_new();
-    gtk_grid_attach(GTK_GRID(grid), entry, 3, 7, 4, 1);
-    Gobutton = gtk_button_new_with_label("Go");
-    g_signal_connect(Gobutton, "clicked", G_CALLBACK(svalider), entry);
-    gtk_grid_attach(GTK_GRID(grid), Gobutton, 8, 7, 1, 1);
-}
-
-void Dimension (){
-    gtk_grid_set_row_spacing(GTK_GRID(grid), 70);
-    label = gtk_label_new("Donner la dimension du tableau :");
-    gtk_grid_attach(GTK_GRID(grid), label, 1, 7,2,1);
-    entry = gtk_entry_new();
-    gtk_grid_attach(GTK_GRID(grid), entry, 3, 7, 1, 1);
-    g_signal_connect(entry, "activate", G_CALLBACK(valider), entry);
-    Gobutton = gtk_button_new_with_label("Go");
-    g_signal_connect(Gobutton, "clicked", G_CALLBACK(valider), entry);
-    gtk_grid_attach(GTK_GRID(grid), Gobutton, 4, 7, 1, 1);
 }
 
 static void creation (GtkButton *button, gpointer data) {
