@@ -128,7 +128,44 @@ void Dimension (){
     g_signal_connect(Gobutton, "clicked", G_CALLBACK(valider), entry);
     gtk_grid_attach(GTK_GRID(grid), Gobutton, 4, 7, 1, 1);
 }
+static void rechvalider (GtkButton *button, gpointer data) {
+    const gchar *text = gtk_editable_get_text(GTK_EDITABLE(entry));
+    float val;
+    sscanf(text,"%f",&val);
+    gtk_widget_set_visible(GTK_WIDGET(label), FALSE);
+    gtk_widget_set_visible(GTK_WIDGET(label1), FALSE);
+    gtk_widget_set_visible(GTK_WIDGET(entry), FALSE);
+    gtk_widget_set_visible(GTK_WIDGET(entry1), FALSE);
+    gtk_widget_set_visible(GTK_WIDGET(Gobutton), FALSE);
+    int i=0;
+    while ((i<dim) && (tab[i]!=val)){
+      i++;
+    }
+    if(i==dim){
+       label = gtk_label_new("La valeur recherchée est inexistente dans le tableau");
+       gtk_grid_attach(GTK_GRID(grid), label, 1, 7, 10, 5);
+    } else {
+       label = gtk_label_new("La valeur recherchée est bien dans le tableau");
+       gtk_grid_attach(GTK_GRID(grid), label, 1, 7, 10, 5);
+       displayTab(GTK_WIDGET(Dgrid),dim, tab,i);
+    }
+}
 
+static void recherche (GtkButton *button, gpointer data) {
+    gtk_widget_set_visible(GTK_WIDGET(Dbutton), FALSE);
+    gtk_widget_set_visible(GTK_WIDGET(Abutton), FALSE);
+    gtk_grid_remove_row(GTK_GRID(grid),7);
+    gtk_grid_remove_row(GTK_GRID(grid),8);
+    gtk_grid_set_row_spacing(GTK_GRID(grid), 70);
+    label = gtk_label_new("Donner la valeur à rechercher :");
+    gtk_grid_attach(GTK_GRID(grid), label, 1, 7, 4, 1);
+    entry = gtk_entry_new();
+    gtk_grid_attach(GTK_GRID(grid), entry, 5, 7, 1, 1);
+    gtk_grid_set_row_spacing(GTK_GRID(grid), 0);
+    Gobutton = gtk_button_new_with_label("Go");
+    g_signal_connect(Gobutton, "clicked", G_CALLBACK(rechvalider),NULL);
+    gtk_grid_attach(GTK_GRID(grid), Gobutton, 6, 7, 1, 1);
+}
 static void insvalider (GtkButton *button, gpointer data) {
     const gchar *text = gtk_editable_get_text(GTK_EDITABLE(entry));
     const gchar *text1 = gtk_editable_get_text(GTK_EDITABLE(entry1));
@@ -220,7 +257,7 @@ static void activate (GtkApplication *app,gpointer user_data)
 
   gtk_grid_attach (GTK_GRID (grid), button, 2, 0, 1, 1);
   button = gtk_button_new_with_label ("Recherche élément");
- 
+  g_signal_connect (button, "clicked", G_CALLBACK (recherche), NULL);
   gtk_grid_attach (GTK_GRID (grid), button, 3, 0, 1, 1);
   button = gtk_button_new_with_label ("Tri à bulles");
 
