@@ -5,7 +5,7 @@
 #include <cairo.h>
 #include <stdlib.h> // Pour la fonction rand
 #include <time.h>   // Pour initialiser la graine de rand
-
+ 
 GtkWidget *window;
 GtkWidget *box;
 GtkWidget *grid;
@@ -43,7 +43,7 @@ gboolean delayed_function (gpointer user_data) {
         GtkWidget *frame = gtk_frame_new(text);
         sprintf(str, "%d", iteration);
         GtkWidget *ind = gtk_label_new(str);   //gtk_frame_new(str);//gtk_label_new(str);
-
+  
 
 
         gtk_grid_attach(GTK_GRID(Dgrid), frame, iteration + 5, 29, 1, 1);
@@ -59,8 +59,8 @@ gboolean delayed_function (gpointer user_data) {
     return G_SOURCE_REMOVE;
 }
 
-void displayTab(GtkWidget *widget, int dim, float tab[dim]) {
-    char str[10],texte[40];
+void displayTab(GtkWidget *widget, int dim, float tab[dim],int pos) {
+    char str[10],str1[40],str2[5];
     gtk_widget_set_visible(GTK_WIDGET(Dgrid),false);
     Dgrid = gtk_grid_new();
     gtk_widget_set_visible(GTK_WIDGET(Dgrid),true);
@@ -68,17 +68,35 @@ void displayTab(GtkWidget *widget, int dim, float tab[dim]) {
     gtk_widget_set_vexpand(Dgrid, TRUE);
     gtk_box_append(GTK_BOX(box), Dgrid); 
     gtk_widget_set_visible(GTK_WIDGET(Dgrid),true); 
+    sprintf(str1, "Affichage du tableau de dimension = %d",dim);
+    GtkWidget *labelinfo = gtk_label_new(str1);
+    gtk_grid_attach(GTK_GRID(Dgrid), labelinfo, 5, 15, 5, 1);
     for (int i=0;i<dim;i++){
         gchar *text = g_strdup_printf("%.2f", tab[i]);
         GtkWidget *frame = gtk_frame_new(text);
         sprintf(str, "%d", i);
         GtkWidget *ind = gtk_label_new(str);
+        const char *str2="\u2191 \u2191 \u2191";  //code ascii de fleche vers le haut
+        GtkWidget *indic = gtk_label_new(str2);        
+        GtkWidget *blueframe = gtk_frame_new(text);
+        GtkWidget *whiteframe = gtk_frame_new(text);
+        const char *cssClass = (pos == i ) ? "blueframe" : "whiteframe";
+        const char *css = g_strdup_printf("#%s { background-color: %s; }", cssClass, (pos == i) ? "#ADD8E6" : "white");
+        GtkCssProvider *provider = gtk_css_provider_new();
+        gtk_css_provider_load_from_string(provider, css);  //, -1, NULL);
+        gtk_style_context_add_provider_for_display(gdk_display_get_default(), GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+        gtk_widget_set_name(blueframe, cssClass);
+        gtk_widget_set_name(whiteframe, cssClass);
         gtk_grid_attach(GTK_GRID(Dgrid), ind, i + 5, 20, 1, 1);
-        gtk_grid_attach(GTK_GRID(Dgrid), frame, i + 5, 21, 1, 1);
+        if (i==pos){
+            gtk_grid_attach(GTK_GRID(Dgrid), blueframe, i + 5, 21, 1, 1);
+            gtk_grid_attach(GTK_GRID(Dgrid), indic, i + 5, 22, 1, 1);
+        }else{
+            gtk_grid_attach(GTK_GRID(Dgrid), whiteframe, i + 5, 21, 1, 1);
+        }  
         g_free(text);
     }
 }
-
 
 
 static void valider (GtkButton *button, gpointer data) {
@@ -92,7 +110,7 @@ static void valider (GtkButton *button, gpointer data) {
      for (int i = 0; i < dim; ++i) {
         tab[i] = rand() % 100;   // Valeurs aléatoires entre 0 et 99
      }
-    displayTab(GTK_WIDGET(Dgrid),dim, tab);
+    displayTab(GTK_WIDGET(Dgrid),dim, tab,-1);
 }
 
 static void svalider (GtkButton *button, gpointer data) {
@@ -114,7 +132,7 @@ static void svalider (GtkButton *button, gpointer data) {
     gtk_widget_set_visible(GTK_WIDGET(entry), FALSE);
     gtk_widget_set_visible(GTK_WIDGET(info), FALSE);
     gtk_widget_set_visible(GTK_WIDGET(Gobutton), FALSE);
-    displayTab(GTK_WIDGET(Dgrid),dim, tab);
+    displayTab(GTK_WIDGET(Dgrid),dim, tab,-1);
 }
 
 void saisie (){
@@ -150,8 +168,49 @@ void Dimension (){
 }
 
 
-  
+static void suppvalider (GtkButton *button, gpointer data) {
+    const gchar *text = gtk_editable_get_text(GTK_EDITABLE(entry));
+    float val;
+    sscanf(text, "%f", &val);
+    g_print("la valeur à supprimer %d\n", val);
+    gtk_widget_set_visible(GTK_WIDGET(label), FALSE);
+    gtk_widget_set_visible(GTK_WIDGET(label1), FALSE);
+    gtk_widget_set_visible(GTK_WIDGET(entry), FALSE);
+    gtk_widget_set_visible(GTK_WIDGET(entry1), FALSE);
+    gtk_widget_set_visible(GTK_WIDGET(Gobutton), FALSE);
+    int i=0;
+    while (i<dim && tab[i] != val) {
+        i++;
+    }
+    if (i<dim){
+        for (int j = i; j < dim - 1; j++) {
+            tab[j] = tab[j + 1];
+        }
+        dim--;
+        label = gtk_label_new("Valeur supprimée avec succès !");
+        gtk_grid_attach(GTK_GRID(grid), label, 1, 7, 3, 1);
+        displayTab(GTK_WIDGET(Dgrid),dim, tab,-1);
+    }else{
+        label = gtk_label_new("La valeur à supprimer n'existe pas dans le tableau !");
+        gtk_grid_attach(GTK_GRID(grid), label, 1, 7, 3, 1);
+    }
+}
 
+static void suppression (GtkButton *button, gpointer data) {
+    gtk_widget_set_visible(GTK_WIDGET(Dbutton), FALSE);
+    gtk_widget_set_visible(GTK_WIDGET(Abutton), FALSE);
+    gtk_grid_remove_row(GTK_GRID(grid),7);
+    gtk_grid_remove_row(GTK_GRID(grid),8);
+    gtk_grid_set_row_spacing(GTK_GRID(grid), 70);
+    label = gtk_label_new("Donner la valeur à supprimer :");
+    gtk_grid_attach(GTK_GRID(grid), label, 1, 7, 4, 1);
+    entry = gtk_entry_new();
+    gtk_grid_attach(GTK_GRID(grid), entry, 5, 7, 1, 1);
+    gtk_grid_set_row_spacing(GTK_GRID(grid), 0);
+    Gobutton = gtk_button_new_with_label("Go");
+    g_signal_connect(Gobutton, "clicked", G_CALLBACK(suppvalider),NULL);
+    gtk_grid_attach(GTK_GRID(grid), Gobutton, 6, 7, 1, 1);
+}
 static void creation (GtkButton *button, gpointer data) {
   gtk_grid_set_row_spacing(GTK_GRID(grid), 0);
   gtk_widget_set_visible(GTK_WIDGET(Dbutton), TRUE);
@@ -190,13 +249,13 @@ activate (GtkApplication *app,
   g_signal_connect (button, "clicked", G_CALLBACK (creation), NULL);
   gtk_grid_attach(GTK_GRID (grid), button, 0, 0, 1, 1);
   button = gtk_button_new_with_label ("insertion");        
- 
+  
   gtk_grid_attach (GTK_GRID (grid), button, 1, 0, 1, 1);
   button = gtk_button_new_with_label ("Suppression");
- 
+  g_signal_connect (button, "clicked", G_CALLBACK (suppression), NULL);
   gtk_grid_attach (GTK_GRID (grid), button, 2, 0, 1, 1);
   button = gtk_button_new_with_label ("Recherche élément");
- 
+
   gtk_grid_attach (GTK_GRID (grid), button, 3, 0, 1, 1);
   button = gtk_button_new_with_label ("Tri à bulles");
  
@@ -219,6 +278,7 @@ activate (GtkApplication *app,
   gtk_box_append(GTK_BOX(box), Dgrid);
   gtk_window_present (GTK_WINDOW (window));
 }
+
 
 
 int
